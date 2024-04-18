@@ -1,0 +1,10 @@
+services:
+  collector:
+    environment:
+      - HONEYCOMB_API_KEY=${HONEYCOMB_API_KEY}
+      - HONEYCOMB_DATASET=${HONEYCOMB_DATASET}
+    volumes:
+      - type: bind
+        source: ./config/collector.honeycomb.yaml
+        target: /conf/collector-config.yaml
+        read_only: true
