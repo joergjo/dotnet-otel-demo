@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/conf/collector-config.yaml"]
+    profiles:
+      - tracing
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - type: bind
+        source: ./config/collector.yaml
+        target: /conf/collector-config.yaml
+        read_only: true
+    restart: unless-stopped
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    profiles:
+      - tracing
+    ports:
+      - "16686:16686"
+    restart: unless-stopped
+    
+  prometheus:
+    image: prom/prometheus:latest
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--log.level=debug"
+    ports:
+      - "9090:9090"
+    volumes:
+      - type: bind
+        source: ./config/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+    restart: unless-stopped
