@@ -56,6 +56,3 @@ app.MapGet("/rolldice/{player?}", (string? player, [FromServices] ILogger<Progra
 });
 
 app.Run();
-
-
-
