@@ -4,3 +4,7 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 .envrc
+.env
+DiceRoller.*.log
+OTEL_DIAGNOSTICS.json
+
