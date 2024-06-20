@@ -22,7 +22,7 @@ builder.Logging.AddOpenTelemetry(options =>
         .SetResourceBuilder(
             ResourceBuilder.CreateDefault()
                 .AddService(ServiceName))
-        .AddConsoleExporter();
+        .AddOtlpExporter();
 });
 builder.Services
     .AddOpenTelemetry()
