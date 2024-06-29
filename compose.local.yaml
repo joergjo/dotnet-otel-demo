@@ -13,6 +13,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     command:
+      - "--enable-feature=otlp-write-receiver"
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--log.level=debug"
     ports:
