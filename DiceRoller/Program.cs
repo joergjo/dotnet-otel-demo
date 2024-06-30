@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -16,27 +17,20 @@ int RollDice()
 }
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Logging.AddOpenTelemetry(options =>
-{
-    options
-        .SetResourceBuilder(
-            ResourceBuilder.CreateDefault()
-                .AddService(ServiceName))
-        .AddOtlpExporter();
-});
 builder.Services
     .AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(ServiceName))
+    .UseOtlpExporter()
+    .WithLogging()
     .WithTracing(tracing => tracing
         .AddSource(DiceRollActivitySource.Name)   
-        .AddAspNetCoreInstrumentation()
-        .AddOtlpExporter())
+        .AddAspNetCoreInstrumentation())
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
+        .AddRuntimeInstrumentation()
         .AddMeter(DiceMeter.Name)
         .AddMeter("Microsoft.AspNetCore.Hosting")
-        .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
-        .AddOtlpExporter());
+        .AddMeter("Microsoft.AspNetCore.Server.Kestrel"));
 
 var app = builder.Build();
 

@@ -11,5 +11,4 @@ public static class Telemetry
     public static readonly ActivitySource DiceRollActivitySource = new(Name);  
     public static readonly Meter DiceMeter = new Meter(Name, "1.0.0");
     public static readonly Counter<int> DiceRollCounter = DiceMeter.CreateCounter<int>("dice_rolls", description: "Counts the number of dice rolls");
-
 }
