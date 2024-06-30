@@ -2,21 +2,22 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: "0.0.0.0:4317"
+        endpoint: collector:4317
       http:
-        endpoint: "0.0.0.0:4318"
+        endpoint: collector:4318
 
 exporters:
   otlp/jaeger:
-    endpoint: "jaeger:4317"
+    endpoint: jaeger:4317
     tls:
       insecure: true
   otlphttp/jaeger:
-    endpoint: "jaeger:4318"
+    endpoint: jaeger:4318
     tls:
       insecure: true
   prometheus:
-    endpoint: "0.0.0.0:8889"
+    endpoint: 0.0.0.0:8889
+    namespace: default
 
 processors:
   batch:
