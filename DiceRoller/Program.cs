@@ -38,7 +38,7 @@ app.MapGet("/rolldice/{player?}", (string? player, [FromServices] ILogger<Progra
 {
     var result = RollDice();
     DiceRollCounter.Add(1);
-    if (player is not null)
+    if (player is { Length: > 0 })
     {
         logger.LogInformation("{Player} rolled a {Result}", player, result);
     }
