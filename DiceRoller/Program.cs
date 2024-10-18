@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using OpenTelemetry;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -20,7 +21,7 @@ builder.Services
     .AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(ServiceName))
     .UseOtlpExporter()
-    .WithLogging()
+    .WithLogging(logging => logging.AddConsoleExporter())
     .WithTracing(tracing => tracing
         .AddSource(DiceRollActivitySource.Name)   
         .AddAspNetCoreInstrumentation())
