@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
@@ -40,10 +41,12 @@ app.MapGet("/rolldice/{player?}", (string? player, [FromServices] ILogger<Progra
     DiceRollCounter.Add(1);
     if (player is { Length: > 0 })
     {
+        Activity.Current?.AddEvent(new ActivityEvent($"player {player} rolled a {result}"));
         logger.LogInformation("{Player} rolled a {Result}", player, result);
     }
     else
     {
+        Activity.Current?.AddEvent(new ActivityEvent($"anonymous player rolled a {result}"));
         logger.LogInformation("anonymous player rolled a {Result}", result);
     }
     return Convert.ToString(result);
