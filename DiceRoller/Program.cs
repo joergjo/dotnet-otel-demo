@@ -1,6 +1,5 @@
 #define AZURE_MONITOR_OFF
 
-using System.Diagnostics;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using OpenTelemetry;
@@ -12,12 +11,12 @@ using static OtelDemo.DiceRoller.Telemetry;
 
 
 // ReSharper disable once MoveLocalFunctionAfterJumpStatement
-int RollDice()
+int RollDice(Tracer tracer)
 {
     // ReSharper disable once ExplicitCallerInfoArgument
-    using var activity = DiceRollActivitySource.StartActivity("rolldice");
+    using var span = tracer.StartActiveSpan("rolldice", SpanKind.Internal);
     var result = Random.Shared.Next(1, 7);
-    activity?.SetTag("result", result);
+    span.SetAttribute("dice.result", result);
     return result;
 }
 
@@ -32,7 +31,7 @@ builder.Services.ConfigureOpenTelemetryLoggerProvider(
 builder.Services.ConfigureOpenTelemetryTracerProvider(
     configure =>
     {
-        configure.AddSource(DiceRollActivitySource.Name);
+        configure.AddSource(Name);
     });
 builder.Services.ConfigureOpenTelemetryMeterProvider(
     configure => configure.AddMeter(DiceMeter.Name));
@@ -43,7 +42,7 @@ builder.Services
     .UseOtlpExporter()
     .WithLogging(logging => logging.AddConsoleExporter())
     .WithTracing(tracing => tracing
-        .AddSource(DiceRollActivitySource.Name)
+        .AddSource(Name)
         .AddAspNetCoreInstrumentation())
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
@@ -52,22 +51,27 @@ builder.Services
         .AddMeter("Microsoft.AspNetCore.Hosting")
         .AddMeter("Microsoft.AspNetCore.Server.Kestrel"));
 #endif
+builder.Services.AddSingleton(TracerProvider.Default.GetTracer(Name));
+
 
 var app = builder.Build();
 
-app.MapGet("/rolldice/{player?}", (string? player, [FromServices] ILogger<Program> logger) =>
+app.MapGet("/rolldice/{player?}", (string? player, [FromServices] Tracer tracer, [FromServices] ILogger<Program> logger) =>
 {
-    var result = RollDice();
+    var result = RollDice(tracer);
     DiceRollCounter.Add(1);
-    if (player is { Length: > 0 })
+    if (Tracer.CurrentSpan.IsRecording)
     {
-        Activity.Current?.AddEvent(new ActivityEvent($"player {player} rolled a {result}"));
-        logger.LogInformation("{Player} rolled a {Result}", player, result);
-    }
-    else
-    {
-        Activity.Current?.AddEvent(new ActivityEvent($"anonymous player rolled a {result}"));
-        logger.LogInformation("anonymous player rolled a {Result}", result);
+        if (player is { Length: > 0 })
+        {
+            Tracer.CurrentSpan.AddEvent($"player {player} rolled a {result}");
+            logger.LogInformation("{Player} rolled a {Result}", player, result);
+        }
+        else
+        {
+            Tracer.CurrentSpan.AddEvent($"anonymous player rolled a {result}");
+            logger.LogInformation("anonymous player rolled a {Result}", result);
+        }
     }
 
     return Convert.ToString(result);
