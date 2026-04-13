@@ -1,4 +1,4 @@
-#define AZURE_MONITOR_OFF
+// #define AZURE_MONITOR
 
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Mvc;

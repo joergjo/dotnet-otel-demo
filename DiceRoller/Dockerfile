@@ -1,4 +1,4 @@
-﻿FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0-jammy AS build
+﻿FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0-noble AS build
 ARG TARGETARCH
 WORKDIR /source
 
@@ -12,7 +12,7 @@ RUN dotnet publish -a $TARGETARCH --no-restore -o /app /p:UseAppHost=false
 
 
 # final stage/image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-chiseled
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled
 USER $APP_UID
 EXPOSE 8080
 WORKDIR /app
