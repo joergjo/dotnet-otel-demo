@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
 
   collector:
-    image: otel/opentelemetry-collector:latest
+    image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/conf/collector-config.yaml"]
     ports:
       - "4317:4317"

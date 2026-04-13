@@ -1,0 +1,14 @@
+services:
+  collector:
+    environment:
+      - CLIENT_ID=${CLIENT_ID}
+      - CLIENT_SECRET=${CLIENT_SECRET}
+      - TENANT_ID=${TENANT_ID}
+      - TRACES_ENDPOINT=${TRACES_ENDPOINT}
+      - LOGS_ENDPOINT=${LOGS_ENDPOINT}
+      - METRICS_ENDPOINT=${METRICS_ENDPOINT}
+    volumes:
+      - type: bind
+        source: ./config/collector.azure.yaml
+        target: /conf/collector-config.yaml
+        read_only: true

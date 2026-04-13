@@ -1,0 +1,44 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: collector:4317
+
+processors:
+  batch:
+
+extensions:
+  azureauth/monitor:
+    service_principal:
+      client_id: ${env:CLIENT_ID}
+      tenant_id: ${env:TENANT_ID}
+      client_secret: ${env:CLIENT_SECRET}
+    scopes: [https://monitor.azure.com/.default]
+  health_check:
+    
+exporters:
+  otlphttp/azuremonitor:
+    traces_endpoint: "${env:TRACES_ENDPOINT}"
+    logs_endpoint: "${env:LOGS_ENDPOINT}"
+    metrics_endpoint: "${env:METRICS_ENDPOINT}"
+    auth:
+      authenticator: azureauth/monitor
+
+service:
+  telemetry:
+    logs:
+      level: "debug"
+  extensions: [health_check, azureauth/monitor]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/azuremonitor]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/azuremonitor]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/azuremonitor]
