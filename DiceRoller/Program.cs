@@ -1,4 +1,4 @@
-#define AZURE_MONITOR_OFF
+#define USE_OTLP_EXPORTER
 
 using System.Diagnostics;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
@@ -10,7 +10,6 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using static OtelDemo.DiceRoller.Telemetry;
 
-
 // ReSharper disable once MoveLocalFunctionAfterJumpStatement
 int RollDice()
 {
@@ -21,22 +20,8 @@ int RollDice()
     return result;
 }
 
-var builder = WebApplication.CreateBuilder(args);
-#if AZURE_MONITOR
-builder.Services
-    .AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService(ServiceName, ServiceNamespace))
-    .UseAzureMonitor();
-builder.Services.ConfigureOpenTelemetryLoggerProvider(
-    configure => configure.AddConsoleExporter());
-builder.Services.ConfigureOpenTelemetryTracerProvider(
-    configure =>
-    {
-        configure.AddSource(DiceRollActivitySource.Name);
-    });
-builder.Services.ConfigureOpenTelemetryMeterProvider(
-    configure => configure.AddMeter(DiceMeter.Name));
-#else
+WebApplicationBuilder? builder = WebApplication.CreateBuilder(args);
+#if USE_OTLP_EXPORTER
 builder.Services
     .AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(ServiceName, ServiceNamespace))
@@ -51,6 +36,20 @@ builder.Services
         .AddMeter(DiceMeter.Name)
         .AddMeter("Microsoft.AspNetCore.Hosting")
         .AddMeter("Microsoft.AspNetCore.Server.Kestrel"));
+#else
+builder.Services
+    .AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService(ServiceName, ServiceNamespace))
+    .UseAzureMonitor();
+builder.Services.ConfigureOpenTelemetryLoggerProvider(
+    configure => configure.AddConsoleExporter());
+builder.Services.ConfigureOpenTelemetryTracerProvider(
+    configure =>
+    {
+        configure.AddSource(DiceRollActivitySource.Name);
+    });
+builder.Services.ConfigureOpenTelemetryMeterProvider(
+    configure => configure.AddMeter(DiceMeter.Name));
 #endif
 
 var app = builder.Build();
