@@ -22,7 +22,7 @@ The demo can run with three different telemetry backends:
 This repository contains two branches that demonstrate different instrumentation approaches:
 
 - **`main`** — Uses .NET's native diagnostic APIs (`Activity`, `ActivitySource`) for tracing
-- **`shim`** — Uses the [OpenTelemetry .NET Shim API](https://github.com/open-telemetry/opentelemetry-dotnet/tree/main/src/OpenTelemetry.Api) (`Tracer`, `Span`) which follows OpenTelemetry's cross-language terminology
+- **`shim`** — Uses the [OpenTelemetry Tracing .NET Shim API](https://opentelemetry.io/docs/languages/dotnet/shim/) (`Tracer`, `Span`) which follows OpenTelemetry's cross-language terminology
 
 ## Prerequisites
 
