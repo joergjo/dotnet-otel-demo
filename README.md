@@ -135,4 +135,25 @@ curl http://localhost:8080/rolldice/Alice
 
 ## Azure Monitor Distro
 
-In addition to routing telemetry through the OTel Collector, the application also supports the [Azure Monitor OpenTelemetry Distro](https://www.nuget.org/packages/Azure.Monitor.OpenTelemetry.AspNetCore) for direct ingestion into Application Insights. Toggle between the two modes by commenting or uncommenting the `#define USE_OTLP_EXPORTER` directive at the top of `Program.cs`. In this case, can use a plain Application Insights _without_ OpenTelemetry support enabled, since the `AzureMonitorExporter` uses the classic Application Insights data ingestion path.  
+In addition to routing telemetry through the OTel Collector, the application also supports the [Azure Monitor OpenTelemetry Distro](https://www.nuget.org/packages/Azure.Monitor.OpenTelemetry.AspNetCore) for direct ingestion into Application Insights. Use the `UseOtlpExport` command line switch or environment variable to switch from native OTLP ingestion to the native Application Insights data path.  
+
+### Zsh or Bash
+```bash
+# Use command line switch
+dotnet run -- --UseOtlpExport=false
+
+#  Use environment variable
+UseOtlpExport=false dotnet run
+```
+
+### PowerShell
+
+```pwsh
+# Use command line switch
+dotnet run -- --UseOtlpExport=false
+
+$env:UseOtlpExport = "false"
+dotnet run
+```
+
+When you are using the Azure Monitor Distor, you can use an Application Insights resource either with or  without OpenTelemetry support enabled.
