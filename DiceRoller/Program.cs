@@ -1,5 +1,3 @@
-#define USE_OTLP_EXPORTER
-
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using OpenTelemetry;
@@ -10,7 +8,7 @@ using OpenTelemetry.Trace;
 using static OtelDemo.DiceRoller.Telemetry;
 
 // ReSharper disable once MoveLocalFunctionAfterJumpStatement
-int RollDice(Tracer tracer)
+static int RollDice(Tracer tracer)
 {
     // ReSharper disable once ExplicitCallerInfoArgument
     using var span = tracer.StartActiveSpan("rolldice", SpanKind.Internal);
@@ -20,12 +18,15 @@ int RollDice(Tracer tracer)
 }
 
 var builder = WebApplication.CreateBuilder(args);
-#if USE_OTLP_EXPORTER
-builder.Services
-    .AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService(ServiceName, ServiceNamespace))
-    .UseOtlpExporter()
-    .WithLogging(logging => logging.AddConsoleExporter())
+var useOtlpExport = builder.Configuration.GetValue("UseOtlpExport", true);
+
+if (useOtlpExport)
+{
+    builder.Services
+        .AddOpenTelemetry()
+        .ConfigureResource(resource => resource.AddService(ServiceName, ServiceNamespace))
+        .UseOtlpExporter()
+        .WithLogging(logging => logging.AddConsoleExporter())
     .WithTracing(tracing => tracing
         .AddSource(Name)
         .AddAspNetCoreInstrumentation())
@@ -35,22 +36,23 @@ builder.Services
         .AddMeter(DiceMeter.Name)
         .AddMeter("Microsoft.AspNetCore.Hosting")
         .AddMeter("Microsoft.AspNetCore.Server.Kestrel"));
-#else
-builder.Services
-    .AddOpenTelemetry()
-    .ConfigureResource(resource => resource.AddService(ServiceName, ServiceNamespace))
-    .UseAzureMonitor();
-builder.Services.ConfigureOpenTelemetryLoggerProvider(
-    configure => configure.AddConsoleExporter());
-builder.Services.ConfigureOpenTelemetryTracerProvider(
-    configure =>
-    {
-        configure.AddSource(Name);
-    });
-builder.Services.ConfigureOpenTelemetryMeterProvider(
-    configure => configure.AddMeter(DiceMeter.Name));
-
-#endif
+}
+else
+{
+    builder.Services
+        .AddOpenTelemetry()
+        .ConfigureResource(resource => resource.AddService(ServiceName, ServiceNamespace))
+        .UseAzureMonitor();
+    builder.Services.ConfigureOpenTelemetryLoggerProvider(
+        configure => configure.AddConsoleExporter());
+    builder.Services.ConfigureOpenTelemetryTracerProvider(
+        configure =>
+        {
+            configure.AddSource(Name);
+        });
+    builder.Services.ConfigureOpenTelemetryMeterProvider(
+        configure => configure.AddMeter(DiceMeter.Name));
+}
 builder.Services.AddSingleton(TracerProvider.Default.GetTracer(Name));
 
 var app = builder.Build();
@@ -76,4 +78,6 @@ app.MapGet("/rolldice/{player?}", (string? player, [FromServices] Tracer tracer,
     return Convert.ToString(result);
 });
 
+var telemetryOption = useOtlpExport ? "OTLP Export" : "Azure Monitor Distro";
+app.Logger.LogInformation("Starting Dice Roller application with {TelemetryOption}", telemetryOption);
 app.Run();
