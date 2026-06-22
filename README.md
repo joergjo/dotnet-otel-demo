@@ -10,9 +10,9 @@ The demo can run with three different telemetry backends:
 
 | Backend | Compose file | Description |
 |---|---|---|
-| **Local** | `compose.local.yaml` | Jaeger for traces, Prometheus for metrics |
+| **Local** | `compose.local.yaml` | Jaeger for traces, Prometheus for metrics, log output on console  |
 | **Azure Monitor** | `compose.azure.yaml` | Azure Monitor OTLP ingestion via the OTel Collector |
-| **Honeycomb** | `compose.honeycomb.yaml` | Honeycomb via the OTel Collector |
+| **Honeycomb** | `compose.honeycomb.yaml` | Honeycomb OTLP ingestion via the OTel Collector |
 
 > [!NOTE]
 > The local backend runs entirely on your machine. Azure Monitor and Honeycomb require real cloud accounts and credentials.
@@ -35,8 +35,11 @@ This repository contains two branches that demonstrate different instrumentation
 
 ### Local backend (Jaeger + Prometheus)
 
+This option requires no additional configuration. Just run the observability stack and the application:
+
 ```bash
 docker compose -f compose.yaml -f compose.local.yaml up
+dotnet run
 ```
 
 Once running, access:
@@ -48,7 +51,7 @@ Once running, access:
 
 Set the required environment variables:
 
-**Bash/Zsh:**
+**Bash or Zsh:**
 
 ```bash
 export CLIENT_ID='<your-service-principal-client-id>'
@@ -70,17 +73,18 @@ $env:METRICS_ENDPOINT='<your-azure-monitor-metrics-endpoint>'
 $env:LOGS_ENDPOINT='<your-azure-monitor-logs-endpoint>'
 ```
 
-Then start the application:
+Then start the OpenTelemetry collector and application:
 
 ```bash
-docker compose -f compose.yaml -f compose.azure.yaml up
+docker compose -f compose.yaml -f compose.azure.yaml up -d
+dotnet run DiceRoller 
 ```
 
 ### Honeycomb
 
 Set the required environment variables:
 
-**Bash/Zsh:**
+**Bash or Zsh:**
 
 ```bash
 export HONEYCOMB_API_KEY='<your-honeycomb-api-key>'
@@ -94,10 +98,24 @@ $env:HONEYCOMB_API_KEY='<your-honeycomb-api-key>'
 $env:HONEYCOMB_DATASET='<your-dataset-name>'
 ```
 
-Then start the application:
+Then start the OpenTelemetry collector and application:
 
 ```bash
 docker compose -f compose.yaml -f compose.honeycomb.yaml up
+dotnet run
+```
+
+### ℹ️ Tip
+
+You can also run the entire stack with Compose by specifying the 
+`all` profile when running Compose. This works for all three supported backends:
+
+```bash
+# Pulls joergjo/dice-roller:latest
+docker compose -f compose.yaml -f compose.azure.yaml --profile all up -d
+
+# Builds a local image and runs it
+docker compose -f compose.yaml -f compose.azure.yaml --profile all up -d --build
 ```
 
 ## Usage
@@ -135,7 +153,9 @@ curl http://localhost:8080/rolldice/Alice
 
 ## Azure Monitor Distro
 
-In addition to routing telemetry through the OTel Collector, the application also supports the [Azure Monitor OpenTelemetry Distro](https://www.nuget.org/packages/Azure.Monitor.OpenTelemetry.AspNetCore) for direct ingestion into Application Insights. Use the `UseOtlpExport` command line switch or environment variable to switch from native OTLP ingestion to the native Application Insights data path.  
+In addition to routing telemetry through the OTel Collector, the application also supports the [Azure Monitor OpenTelemetry Distro](https://www.nuget.org/packages/Azure.Monitor.OpenTelemetry.AspNetCore) for direct ingestion into Application Insights. Use the `UseOtlpExport` command line switch or environment variable to switch from native OTLP ingestion to the native Application Insights data path. 
+
+In this case, you don't need to run any of the backend options listed above. Just run the application from your terminal window.
 
 ### Zsh or Bash
 ```bash
@@ -156,4 +176,4 @@ $env:UseOtlpExport = "false"
 dotnet run
 ```
 
-When you are using the Azure Monitor Distor, you can use an Application Insights resource either with or  without OpenTelemetry support enabled.
+The Azure Monitor Distro works regardless of whether your Application Insights resource has OpenTelemetry support enabled or not.
