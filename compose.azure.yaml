@@ -8,7 +8,4 @@ services:
       - LOGS_ENDPOINT=${LOGS_ENDPOINT}
       - METRICS_ENDPOINT=${METRICS_ENDPOINT}
     volumes:
-      - type: bind
-        source: ./config/collector.azure.yaml
-        target: /conf/collector-config.yaml
-        read_only: true
+      - ./config/collector.azure.yaml:/conf/collector-config.yaml:ro
