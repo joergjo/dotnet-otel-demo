@@ -5,6 +5,7 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using OtelDemo.DiceRoller;
 using static OtelDemo.DiceRoller.Telemetry;
 
 // ReSharper disable once MoveLocalFunctionAfterJumpStatement
@@ -22,20 +23,26 @@ var useOtlpExport = builder.Configuration.GetValue("UseOtlpExport", true);
 
 if (useOtlpExport)
 {
+     builder.Logging.AddOpenTelemetry(logging =>
+     {
+         logging.IncludeFormattedMessage = true;
+         logging.IncludeScopes = true;
+         logging.ParseStateValues = true;
+     });
     builder.Services
         .AddOpenTelemetry()
         .ConfigureResource(resource => resource.AddService(ServiceName, ServiceNamespace))
         .UseOtlpExporter()
-        .WithLogging(logging => logging.AddConsoleExporter())
-    .WithTracing(tracing => tracing
-        .AddSource(Name)
-        .AddAspNetCoreInstrumentation())
-    .WithMetrics(metrics => metrics
-        .AddAspNetCoreInstrumentation()
-        .AddRuntimeInstrumentation()
-        .AddMeter(DiceMeter.Name)
-        .AddMeter("Microsoft.AspNetCore.Hosting")
-        .AddMeter("Microsoft.AspNetCore.Server.Kestrel"));
+        .WithLogging()
+        .WithTracing(tracing => tracing
+            .AddSource(Name)
+            .AddAspNetCoreInstrumentation())
+        .WithMetrics(metrics => metrics
+            .AddAspNetCoreInstrumentation()
+            .AddRuntimeInstrumentation()
+            .AddMeter(DiceMeter.Name)
+            .AddMeter("Microsoft.AspNetCore.Hosting")
+            .AddMeter("Microsoft.AspNetCore.Server.Kestrel"));
 }
 else
 {
@@ -66,12 +73,12 @@ app.MapGet("/rolldice/{player?}", (string? player, [FromServices] Tracer tracer,
         if (player is { Length: > 0 })
         {
             Tracer.CurrentSpan.AddEvent($"player {player} rolled a {result}");
-            logger.LogInformation("{Player} rolled a {Result}", player, result);
+            logger.LogDiceRoll(player, result);
         }
         else
         {
             Tracer.CurrentSpan.AddEvent($"anonymous player rolled a {result}");
-            logger.LogInformation("anonymous player rolled a {Result}", result);
+            logger.LogDiceRoll("anonymous", result);
         }
     }
 
@@ -79,5 +86,5 @@ app.MapGet("/rolldice/{player?}", (string? player, [FromServices] Tracer tracer,
 });
 
 var telemetryOption = useOtlpExport ? "OTLP Export" : "Azure Monitor Distro";
-app.Logger.LogInformation("Starting Dice Roller application with {TelemetryOption}", telemetryOption);
+app.Logger.LogStartup(telemetryOption);
 app.Run();
