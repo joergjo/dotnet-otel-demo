@@ -18,6 +18,8 @@ exporters:
   prometheus:
     endpoint: 0.0.0.0:8889
     namespace: default
+  debug:
+    verbosity: detailed
 
 processors:
   batch:
@@ -39,3 +41,7 @@ service:
        receivers: [otlp]
        processors: [batch]
        exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
