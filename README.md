@@ -6,16 +6,17 @@ A .NET demo application showcasing OpenTelemetry instrumentation with multiple t
 
 The application is an enhanced version of the OpenTelemetry [dice roller](https://opentelemetry.io/docs/languages/net/getting-started/) introductory sample. It exposes a single HTTP endpoint that rolls a dice, while emitting traces, metrics, and logs via OpenTelemetry.
 
-The demo can run with three different telemetry backends:
+The demo can run with four different telemetry backends:
 
-| Backend | Compose file | Description |
-|---|---|---|
-| **Local** | `compose.local.yaml` | Jaeger for traces, Prometheus for metrics, log output on console  |
-| **Azure Monitor** | `compose.azure.yaml` | Azure Monitor OTLP ingestion via the OTel Collector |
-| **Honeycomb** | `compose.honeycomb.yaml` | Honeycomb OTLP ingestion via the OTel Collector |
+| Backend               | Compose file | Description |
+|-----------------------|---|---|
+| **Local**             | `compose.local.yaml` | Jaeger for traces, Prometheus for metrics, and log output on the console |
+| **Grafana OTel-LGTM** | `compose.lgtm.yaml` | Grafana's all-in-one OpenTelemetry backend for traces, metrics, and logs |
+| **Azure Monitor**     | `compose.azure.yaml` | Azure Monitor OTLP ingestion via the OTel Collector |
+| **Honeycomb**         | `compose.honeycomb.yaml` | Honeycomb OTLP ingestion via the OTel Collector |
 
 > [!NOTE]
-> The local backend runs entirely on your machine. Azure Monitor and Honeycomb require real cloud accounts and credentials.
+> The `.local` and `.lgtm` backends run entirely on your machine. Azure Monitor and Honeycomb require cloud accounts and credentials.
 
 ## Branches
 
@@ -46,6 +47,21 @@ Once running, access:
 - **Application:** http://localhost:8080/rolldice
 - **Jaeger UI:** http://localhost:16686
 - **Prometheus UI:** http://localhost:9090
+
+### Grafana OTEL-LGTM backend
+
+Grafana's [OTEL-LGTM](https://github.com/grafana/docker-otel-lgtm) image provides a local all-in-one backend for traces, metrics, and logs.
+This option requires no additional configuration. Just run the observability stack and the application:
+
+```bash
+docker compose -f compose.lgtm.yaml up
+```
+
+> This option uses a stand-alone Compose file and additional overlay.
+
+Once running, access:
+- **Application:** http://localhost:8080/rolldice
+- **Grafana:** http://localhost:3000
 
 ### Azure Monitor
 
@@ -108,14 +124,14 @@ dotnet run
 ### ℹ️ Tip
 
 You can also run the entire stack with Compose by specifying the 
-`all` profile when running Compose. This works for all three supported backends:
+`all` profile. For example, the following runs the Grafana OTEL-LGTM backend:
 
 ```bash
 # Pulls joergjo/dice-roller:latest
-docker compose -f compose.yaml -f compose.azure.yaml --profile all up -d
+docker compose -f compose.lgtm.yaml --profile all up -d
 
 # Builds a local image and runs it
-docker compose -f compose.yaml -f compose.azure.yaml --profile all up -d --build
+docker compose -f compose.lgtm.yaml --profile all up -d --build
 ```
 
 ## Usage
@@ -137,6 +153,7 @@ curl http://localhost:8080/rolldice/Alice
 ```
 ├── DiceRoller/
 │   ├── Program.cs           # Application entry point and OTel configuration
+│   ├── LoggerExtensions.cs  # Compile-time logging source generation
 │   ├── Telemetry.cs         # Telemetry constants, meters, and counters
 │   ├── Dockerfile           # Multi-stage container build
 │   └── DiceRoller.csproj    # Project file (.NET 10)
@@ -147,6 +164,7 @@ curl http://localhost:8080/rolldice/Alice
 │   └── prometheus.yml           # Prometheus scrape config
 ├── compose.yaml             # Base Docker Compose (app + collector)
 ├── compose.local.yaml       # Local backend overlay (Jaeger + Prometheus)
+├── compose.lgtm.yaml        # Local Grafana OTEL-LGTM backend overlay
 ├── compose.azure.yaml       # Azure Monitor overlay
 └── compose.honeycomb.yaml   # Honeycomb overlay
 ```
