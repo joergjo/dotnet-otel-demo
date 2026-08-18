@@ -7,4 +7,5 @@ riderModule.iml
 .env
 DiceRoller.*.log
 OTEL_DIAGNOSTICS.json
+.DS_Store
 
