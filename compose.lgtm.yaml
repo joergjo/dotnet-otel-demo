@@ -6,7 +6,10 @@ services:
     profiles:
       - all
     image: ${DICE_ROLLER_IMAGE:-joergjo/dice-roller:latest}
-    build: ./DiceRoller
+    build: 
+      context: ./DiceRoller
+      args:
+        - NUGET_SOURCE=${NUGET_SOURCE:-https://api.nuget.org/v3/index.json}
     ports:
       - "8080:8080"
     environment:

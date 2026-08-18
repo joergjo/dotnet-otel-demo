@@ -6,7 +6,10 @@ services:
     profiles:
       - all
     image: ${DICE_ROLLER_IMAGE:-joergjo/dice-roller:latest}
-    build: ./DiceRoller
+    build: 
+      context: ./DiceRoller
+      args:
+        - NUGET_SOURCE=${NUGET_SOURCE:-https://api.nuget.org/v3/index.json}
     ports:
       - "8080:8080"
     environment:
@@ -21,6 +24,7 @@ services:
     command: ["--config=/conf/collector-config.yaml"]
     ports:
       - "4317:4317"
+      - "4318:4318"
     volumes:
       - ./config/collector.yaml:/conf/collector-config.yaml:ro
     restart: unless-stopped
