@@ -8,7 +8,7 @@ processors:
   batch:
 
 extensions:
-  azureauth/monitor:
+  azure_auth:
     service_principal:
       client_id: ${env:CLIENT_ID}
       tenant_id: ${env:TENANT_ID}
@@ -22,13 +22,13 @@ exporters:
     logs_endpoint: "${env:LOGS_ENDPOINT}"
     metrics_endpoint: "${env:METRICS_ENDPOINT}"
     auth:
-      authenticator: azureauth/monitor
+      authenticator: azure_auth
 
 service:
   telemetry:
     logs:
       level: "debug"
-  extensions: [health_check, azureauth/monitor]
+  extensions: [health_check, azure_auth]
   pipelines:
     traces:
       receivers: [otlp]
