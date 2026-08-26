@@ -121,10 +121,10 @@ docker compose -f compose.yaml -f compose.honeycomb.yaml up
 dotnet run
 ```
 
-### ℹ️ Tip
+### ℹ️ Tips
 
-You can also run the entire stack with Compose by specifying the 
-`all` profile. For example, the following runs the Grafana OTEL-LGTM backend:
+You can run the entire stack with Compose by specifying the 
+`all` profile. For example, the following command runs the DiceRoller app and Grafana OTEL-LGTM backend in Docker:
 
 ```bash
 # Pulls joergjo/dice-roller:latest
@@ -132,6 +132,13 @@ docker compose -f compose.lgtm.yaml --profile all up -d
 
 # Builds a local image and runs it
 docker compose -f compose.lgtm.yaml --profile all up -d --build
+```
+
+You can simulate a complete trace (i.e., one including an API client) by using [otel-cli](https://github.com/equinix-labs/otel-cli):
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+otel-cli exec --service diceroller-client --name roll -- curl -H 'traceparent: {{traceparent}}' http://localhost:5148/rolldice
 ```
 
 ## Usage
