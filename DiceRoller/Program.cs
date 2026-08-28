@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Mvc;
 using OpenTelemetry;
@@ -9,12 +10,19 @@ using OtelDemo.DiceRoller;
 using static OtelDemo.DiceRoller.Telemetry;
 
 // ReSharper disable once MoveLocalFunctionAfterJumpStatement
-static int RollDice(Tracer tracer)
+static async Task<int> RollDice(Tracer tracer, string? player)
 {
     // ReSharper disable once ExplicitCallerInfoArgument
     using var span = tracer.StartActiveSpan("rolldice", SpanKind.Internal);
+    KeyValuePair<string, object?>[] tags = player is { Length: > 0 } ? [new ("player", player)] : [];
+
+    var stopWatch = Stopwatch.StartNew();
+    // Simulate work
+    await Task.Delay(Random.Shared.Next(1, 100));
     var result = Random.Shared.Next(1, 7);
     span.SetAttribute("dice.result", result);
+    DiceRollHistogram.Record(stopWatch.ElapsedMilliseconds, tags: tags);
+
     return result;
 }
 
@@ -23,12 +31,12 @@ var useOtlpExport = builder.Configuration.GetValue("UseOtlpExport", true);
 
 if (useOtlpExport)
 {
-     builder.Logging.AddOpenTelemetry(logging =>
-     {
-         logging.IncludeFormattedMessage = true;
-         logging.IncludeScopes = true;
-         logging.ParseStateValues = true;
-     });
+    builder.Logging.AddOpenTelemetry(logging =>
+    {
+        logging.IncludeFormattedMessage = true;
+        logging.IncludeScopes = true;
+        logging.ParseStateValues = true;
+    });
     builder.Services
         .AddOpenTelemetry()
         .ConfigureResource(resource => resource.AddService(ServiceName, ServiceNamespace))
@@ -40,6 +48,7 @@ if (useOtlpExport)
         .WithMetrics(metrics => metrics
             .AddAspNetCoreInstrumentation()
             .AddRuntimeInstrumentation()
+            .SetExemplarFilter(ExemplarFilterType.TraceBased)
             .AddMeter(DiceMeter.Name)
             .AddMeter("Microsoft.AspNetCore.Hosting")
             .AddMeter("Microsoft.AspNetCore.Server.Kestrel"));
@@ -64,9 +73,9 @@ builder.Services.AddSingleton(TracerProvider.Default.GetTracer(Name));
 
 var app = builder.Build();
 
-app.MapGet("/rolldice/{player?}", (string? player, [FromServices] Tracer tracer, [FromServices] ILogger<Program> logger) =>
+app.MapGet("/rolldice/{player?}", async (string? player, [FromServices] Tracer tracer, [FromServices] ILogger<Program> logger) =>
 {
-    var result = RollDice(tracer);
+    var result = await RollDice(tracer, player);
     DiceRollCounter.Add(1);
     if (Tracer.CurrentSpan.IsRecording)
     {
