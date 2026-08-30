@@ -10,12 +10,19 @@ using OtelDemo.DiceRoller;
 using static OtelDemo.DiceRoller.Telemetry;
 
 // ReSharper disable once MoveLocalFunctionAfterJumpStatement
-static int RollDice()
+static async Task<int> RollDice(string? player)
 {
     // ReSharper disable once ExplicitCallerInfoArgument
     using var activity = DiceRollActivitySource.StartActivity("rolldice");
+    KeyValuePair<string, object?>[] tags = player is { Length: > 0 } ? [new KeyValuePair<string, object?>("player", player)] : [];
+    
+    var stopWatch = Stopwatch.StartNew();
+    // Simulate work
+    await Task.Delay(Random.Shared.Next(1, 100));
     var result = Random.Shared.Next(1, 7);
     activity?.SetTag("result", result);
+    DiceRollHistogram.Record(stopWatch.ElapsedMilliseconds, tags: tags);
+
     return result;
 }
 
@@ -41,6 +48,7 @@ if (useOtlpExport)
         .WithMetrics(metrics => metrics
             .AddAspNetCoreInstrumentation()
             .AddRuntimeInstrumentation()
+            .SetExemplarFilter(ExemplarFilterType.TraceBased)
             .AddMeter(DiceMeter.Name)
             .AddMeter("Microsoft.AspNetCore.Hosting")
             .AddMeter("Microsoft.AspNetCore.Server.Kestrel"));
@@ -64,9 +72,9 @@ else
 
 var app = builder.Build();
 
-app.MapGet("/rolldice/{player?}", (string? player, [FromServices] ILogger<Program> logger) =>
+app.MapGet("/rolldice/{player?}", async (string? player, [FromServices] ILogger<Program> logger) =>
 {
-    var result = RollDice();
+    var result = await RollDice(player);
     DiceRollCounter.Add(1);
     if (player is { Length: > 0 })
     {
