@@ -79,16 +79,10 @@ app.MapGet("/rolldice/{player?}", async (string? player, [FromServices] Tracer t
     DiceRollCounter.Add(1);
     if (Tracer.CurrentSpan.IsRecording)
     {
-        if (player is { Length: > 0 })
-        {
-            Tracer.CurrentSpan.AddEvent($"player {player} rolled a {result}");
-            logger.LogDiceRoll(player, result);
-        }
-        else
-        {
-            Tracer.CurrentSpan.AddEvent($"anonymous player rolled a {result}");
-            logger.LogDiceRoll("anonymous", result);
-        }
+        var playerName = player is { Length: > 0 } ? player : "anonymous";
+        Tracer.CurrentSpan.SetAttribute("dice.player", playerName);
+        Tracer.CurrentSpan.AddEvent($"player {playerName} rolled a {result}");
+        logger.LogDiceRoll(playerName, result);
     }
 
     return Convert.ToString(result);
