@@ -76,17 +76,15 @@ app.MapGet("/rolldice/{player?}", async (string? player, [FromServices] ILogger<
 {
     var result = await RollDice(player);
     DiceRollCounter.Add(1);
-    if (player is { Length: > 0 })
+    
+    if (Activity.Current?.Recorded == true)
     {
-        Activity.Current?.AddEvent(new ActivityEvent($"player {player} rolled a {result}"));
-        logger.LogDiceRoll(player, result);
+        var playerName = player is { Length: > 0 } ? player : "anonymous";
+        Activity.Current.AddEvent(new ActivityEvent($"player {playerName} rolled a {result}"));
+        Activity.Current.AddTag("dice.player", playerName);
+        logger.LogDiceRoll(playerName, result);
     }
-    else
-    {
-        Activity.Current?.AddEvent(new ActivityEvent($"anonymous player rolled a {result}"));
-        logger.LogDiceRoll("anonymous player", result);
-    }
-
+    
     return Convert.ToString(result);
 });
 
