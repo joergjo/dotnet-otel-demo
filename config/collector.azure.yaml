@@ -2,7 +2,7 @@ receivers:
   otlp:
     protocols:
       grpc:
-        endpoint: collector:4317
+        endpoint: 0.0.0.0:4317
 
 processors:
   batch:
@@ -17,7 +17,7 @@ extensions:
   health_check:
     
 exporters:
-  otlphttp/azuremonitor:
+  otlp_http/azuremonitor:
     traces_endpoint: "${env:TRACES_ENDPOINT}"
     logs_endpoint: "${env:LOGS_ENDPOINT}"
     metrics_endpoint: "${env:METRICS_ENDPOINT}"
@@ -27,18 +27,18 @@ exporters:
 service:
   telemetry:
     logs:
-      level: "debug"
+      level: debug
   extensions: [health_check, azure_auth]
   pipelines:
     traces:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp/azuremonitor]
+      exporters: [otlp_http/azuremonitor]
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp/azuremonitor]
+      exporters: [otlp_http/azuremonitor]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp/azuremonitor]
+      exporters: [otlp_http/azuremonitor]
