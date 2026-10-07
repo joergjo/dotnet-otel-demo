@@ -19,7 +19,5 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - type: bind
-        source: ./config/prometheus.yml
-        target: /etc/prometheus/prometheus.yml
+      - ./config/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
     restart: unless-stopped
