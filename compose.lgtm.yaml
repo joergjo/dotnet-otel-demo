@@ -1,12 +1,10 @@
-name: dotnet-otel-demo
-
 services:
 
   dice-roller:
     profiles:
       - all
     image: ${DICE_ROLLER_IMAGE:-joergjo/dice-roller:latest}
-    build: 
+    build:
       context: ./DiceRoller
       args:
         - NUGET_SOURCE=${NUGET_SOURCE:-https://api.nuget.org/v3/index.json}
