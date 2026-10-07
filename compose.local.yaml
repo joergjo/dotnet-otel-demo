@@ -9,11 +9,11 @@ services:
     ports:
       - "16686:16686"
     restart: unless-stopped
-    
+
   prometheus:
     image: prom/prometheus:latest
     command:
-      - "--enable-feature=otlp-write-receiver"
+      - "--web.enable-otlp-receiver"
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--log.level=debug"
     ports:
