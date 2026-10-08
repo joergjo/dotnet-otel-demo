@@ -6,7 +6,7 @@ services:
     profiles:
       - all
     image: ${DICE_ROLLER_IMAGE:-joergjo/dice-roller:latest}
-    build: 
+    build:
       context: ./DiceRoller
       args:
         - NUGET_SOURCE=${NUGET_SOURCE:-https://api.nuget.org/v3/index.json}
@@ -20,8 +20,8 @@ services:
     restart: unless-stopped
 
   collector:
-    image: otel/opentelemetry-collector-contrib:latest
-    command: ["--config=/conf/collector-config.yaml"]
+    image: otel/opentelemetry-collector-contrib:0.162.0
+    command: [ "--config=/conf/collector-config.yaml" ]
     ports:
       - "4317:4317"
       - "4318:4318"
